@@ -86,7 +86,7 @@
         {
           "id": "llmessage-sidebar",
           "title": "LLMessage",
-          "icon": "assets/icon.png"
+          "icon": "$(comment-discussion)"
         }
       ]
     },
@@ -205,11 +205,15 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "lint": "eslint src --ext ts"
+    "lint": "eslint src --ext ts",
+    "package": "vsce package",
+    "publish:openvsx": "ovsx publish"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "@vscode/vsce": "^2.24.0",
+    "ovsx": "^0.9.0"
   }
 }

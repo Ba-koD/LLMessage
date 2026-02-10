@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Profile, getConfig, getActiveProfile, getProviderLabel, getCommitStyleLabel, migrateProfile } from '../config/settings';
+import { Profile, getConfig, getActiveProfile, getProviderLabel, getCommitStyleLabel, migrateProfile, requiresApiKey } from '../config/settings';
 
 /**
  * TreeView provider for the LLMessage sidebar — shows all profiles.
@@ -169,6 +169,18 @@ export class ActiveProfileInfoProvider implements vscode.TreeDataProvider<vscode
       arguments: ['model'],
     };
     items.push(modelItem);
+
+    if (requiresApiKey(p.provider)) {
+      const apiKeyItem = new vscode.TreeItem('API Key: ••••••••');
+      apiKeyItem.iconPath = new vscode.ThemeIcon('key');
+      apiKeyItem.contextValue = 'infoField-apikey';
+      apiKeyItem.command = {
+        command: 'llmessage.editActiveProfileField',
+        title: 'Edit API Key',
+        arguments: ['apikey'],
+      };
+      items.push(apiKeyItem);
+    }
 
     const styleItem = new vscode.TreeItem(`Style: ${getCommitStyleLabel(p.commitStyle)}`);
     styleItem.iconPath = new vscode.ThemeIcon('edit');

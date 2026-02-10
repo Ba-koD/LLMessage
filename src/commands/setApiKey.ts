@@ -525,22 +525,47 @@ export function registerSwitchProfileCommand(
 
 /**
  * Command: Switch to a specific profile by alias (from TreeView click).
+ * If no alias provided, show QuickPick to select a profile.
  */
 export function registerSwitchProfileToCommand(
   context: vscode.ExtensionContext,
 ): vscode.Disposable {
-  return vscode.commands.registerCommand('llmessage.switchProfileTo', async (alias: string) => {
-    if (!alias) { return; }
+  return vscode.commands.registerCommand('llmessage.switchProfileTo', async (alias?: string) => {
     const { profiles } = getConfig();
-    if (!profiles[alias]) { return; }
+    const aliases = Object.keys(profiles);
+    
+    if (aliases.length === 0) {
+      vscode.window.showInformationMessage('No profiles configured yet.');
+      return;
+    }
+
+    let selectedAlias = alias;
+
+    if (!selectedAlias) {
+      const items = aliases.map((a) => {
+        const p = migrateProfile(profiles[a]);
+        return { 
+          label: a, 
+          description: `${getProviderLabel(p.provider)}${p.model ? ' / ' + p.model : ''}` 
+        };
+      });
+      const picked = await vscode.window.showQuickPick(items, {
+        placeHolder: 'Select a profile to switch to',
+        title: 'LLMessage: Switch Profile',
+      });
+      if (!picked) { return; }
+      selectedAlias = picked.label;
+    }
+
+    if (!profiles[selectedAlias]) { return; }
 
     await vscode.workspace.getConfiguration('llmessage')
-      .update('activeProfile', alias, vscode.ConfigurationTarget.Global);
+      .update('activeProfile', selectedAlias, vscode.ConfigurationTarget.Global);
 
     refreshViews();
-    const p = migrateProfile(profiles[alias]);
+    const p = migrateProfile(profiles[selectedAlias]);
     vscode.window.showInformationMessage(
-      `LLMessage: Switched to "${alias}" (${getProviderLabel(p.provider)})`
+      `LLMessage: Switched to "${selectedAlias}" (${getProviderLabel(p.provider)})`
     );
   });
 }
