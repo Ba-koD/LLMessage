@@ -2,7 +2,7 @@
   "name": "llmessage",
   "displayName": "LLMessage",
   "description": "AI-powered commit message generator supporting OpenAI, Anthropic, Gemini, Local, and custom endpoints",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "BakoD",
   "icon": "assets/icon.png",
   "engines": {
