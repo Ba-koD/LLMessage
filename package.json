@@ -1,0 +1,215 @@
+{
+  "name": "llmessage",
+  "displayName": "LLMessage",
+  "description": "AI-powered commit message generator supporting OpenAI, Anthropic, Gemini, Local, and custom endpoints",
+  "version": "0.0.1",
+  "publisher": "BakoD",
+  "icon": "assets/icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "SCM Providers",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "git", "commit", "ai", "llm", "openai", "local", "anthropic", "gemini"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/llmessage/llmessage"
+  },
+  "license": "MIT",
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "llmessage.generateCommit",
+        "title": "LLMessage: Generate Commit Message",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "llmessage.addProfile",
+        "title": "LLMessage: Add Profile",
+        "icon": "$(add)"
+      },
+      {
+        "command": "llmessage.editProfile",
+        "title": "LLMessage: Edit Profile",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "llmessage.removeProfile",
+        "title": "LLMessage: Remove Profile",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "llmessage.switchProfile",
+        "title": "LLMessage: Switch Profile"
+      },
+      {
+        "command": "llmessage.switchProfileTo",
+        "title": "LLMessage: Switch to Profile"
+      },
+      {
+        "command": "llmessage.setActiveProfileForWorkspace",
+        "title": "LLMessage: Set Profile for This Project",
+        "icon": "$(pin)"
+      },
+      {
+        "command": "llmessage.clearWorkspaceProfile",
+        "title": "LLMessage: Clear Project Profile"
+      },
+      {
+        "command": "llmessage.refreshProfiles",
+        "title": "LLMessage: Refresh Profiles",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "llmessage.viewCustomPrompt",
+        "title": "LLMessage: View/Edit Custom Prompt"
+      },
+      {
+        "command": "llmessage.editActiveProfileField",
+        "title": "LLMessage: Edit Active Profile Field",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "llmessage.toggleProfileScope",
+        "title": "LLMessage: Toggle Profile Scope (Global / Project)",
+        "icon": "$(arrow-swap)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "llmessage-sidebar",
+          "title": "LLMessage",
+          "icon": "assets/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "llmessage-sidebar": [
+        {
+          "id": "llmessage.profilesView",
+          "name": "Profiles"
+        },
+        {
+          "id": "llmessage.infoView",
+          "name": "Active Profile"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "llmessage.profilesView",
+        "contents": "No profiles configured yet.\n[Add Profile](command:llmessage.addProfile)",
+        "when": "llmessage.noProfiles"
+      }
+    ],
+    "menus": {
+      "scm/title": [
+        {
+          "when": "scmProvider == git",
+          "command": "llmessage.generateCommit",
+          "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "llmessage.addProfile",
+          "when": "view == llmessage.profilesView",
+          "group": "navigation"
+        },
+        {
+          "command": "llmessage.refreshProfiles",
+          "when": "view == llmessage.profilesView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "llmessage.editProfile",
+          "when": "view == llmessage.profilesView && viewItem == profile",
+          "group": "inline@1"
+        },
+        {
+          "command": "llmessage.removeProfile",
+          "when": "view == llmessage.profilesView && viewItem == profile",
+          "group": "inline@2"
+        },
+        {
+          "command": "llmessage.setActiveProfileForWorkspace",
+          "when": "view == llmessage.profilesView && viewItem == profile",
+          "group": "inline@3"
+        },
+        {
+          "command": "llmessage.editActiveProfileField",
+          "when": "view == llmessage.infoView && viewItem =~ /^infoField-/ && viewItem != infoField-scope",
+          "group": "inline"
+        },
+        {
+          "command": "llmessage.toggleProfileScope",
+          "when": "view == llmessage.infoView && viewItem == infoField-scope",
+          "group": "inline"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "LLMessage",
+      "properties": {
+        "llmessage.activeProfile": {
+          "type": "string",
+          "default": "",
+          "description": "Currently active profile alias (global default)"
+        },
+        "llmessage.workspaceProfile": {
+          "type": "string",
+          "default": "",
+          "description": "Profile alias for this workspace/project. Overrides the global active profile.",
+          "scope": "resource"
+        },
+        "llmessage.profiles": {
+          "type": "object",
+          "default": {},
+          "description": "Saved profiles. Each key is an alias with { provider, model, commitStyle, customPrompt, locale }."
+        },
+        "llmessage.maxDiffLength": {
+          "type": "number",
+          "default": 4000,
+          "minimum": 500,
+          "maximum": 32000,
+          "description": "Maximum character length of diff sent to AI"
+        },
+        "llmessage.local.url": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Local server URL (Ollama, LM Studio, etc.)"
+        },
+        "llmessage.custom.url": {
+          "type": "string",
+          "default": "",
+          "description": "Custom OpenAI-compatible API endpoint URL"
+        },
+        "llmessage.custom.model": {
+          "type": "string",
+          "default": "",
+          "description": "Model name for custom endpoint"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.3"
+  }
+}
