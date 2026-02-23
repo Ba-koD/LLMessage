@@ -3,6 +3,7 @@ import { AIProvider, ChatMessage, GenerateResult } from './base';
 export class OpenAIProvider implements AIProvider {
   readonly name = 'OpenAI';
   private static readonly DEFAULT_MODEL = 'gpt-4o-mini';
+  private static readonly MAX_OUTPUT_TOKENS = 4096;
 
   constructor(private readonly apiKey: string) {}
 
@@ -22,7 +23,7 @@ export class OpenAIProvider implements AIProvider {
         model: useModel,
         messages,
         temperature: 0.4,
-        max_tokens: 300,
+        max_tokens: OpenAIProvider.MAX_OUTPUT_TOKENS,
       }),
       signal,
     });
@@ -34,12 +35,14 @@ export class OpenAIProvider implements AIProvider {
 
     const data = (await response.json()) as {
       model: string;
-      choices: Array<{ message: { content: string } }>;
+      choices: Array<{ message: { content: string }; finish_reason?: string }>;
     };
 
+    const choice = data.choices[0];
     return {
-      message: data.choices[0]?.message?.content?.trim() ?? '',
+      message: choice?.message?.content?.trim() ?? '',
       model: data.model || useModel,
+      truncated: choice?.finish_reason === 'length',
     };
   }
 

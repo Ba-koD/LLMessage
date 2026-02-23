@@ -43,13 +43,16 @@ export class GeminiProvider implements AIProvider {
     const data = (await response.json()) as {
       modelVersion?: string;
       candidates: Array<{
+        finishReason?: string;
         content: { parts: Array<{ text: string }> };
       }>;
     };
 
+    const candidate = data.candidates?.[0];
     return {
-      message: data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '',
+      message: candidate?.content?.parts?.[0]?.text?.trim() ?? '',
       model: data.modelVersion || useModel,
+      truncated: candidate?.finishReason?.toUpperCase() === 'MAX_TOKENS',
     };
   }
 

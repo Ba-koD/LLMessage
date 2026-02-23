@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { getConfig } from '../config/settings';
 import { SecretManager } from '../config/secrets';
 import { createProvider } from '../providers/factory';
 import { getStagedDiff, setCommitMessage } from '../git/diff';
@@ -14,10 +13,11 @@ export function registerGenerateCommitCommand(
   context: vscode.ExtensionContext,
   secretManager: SecretManager,
 ): vscode.Disposable {
+  const version = String(context.extension.packageJSON.version ?? 'unknown');
+  const prefix = `v${version} LLMessage:`;
+
   return vscode.commands.registerCommand('llmessage.generateCommit', async () => {
     try {
-      const config = getConfig();
-
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
@@ -26,7 +26,7 @@ export function registerGenerateCommitCommand(
         },
         async (progress, token) => {
           progress.report({ message: 'Collecting git diff...' });
-          const diff = await getStagedDiff(config.maxDiffLength);
+          const diff = await getStagedDiff();
 
           if (token.isCancellationRequested) return;
 
@@ -45,20 +45,27 @@ export function registerGenerateCommitCommand(
 
             if (token.isCancellationRequested || !result.message) {
               if (!result.message) {
-                vscode.window.showWarningMessage('LLMessage: AI returned an empty message.');
+                vscode.window.showWarningMessage(`${prefix} AI returned an empty message.`);
               }
               return;
             }
 
             setCommitMessage(result.message);
-            vscode.window.showInformationMessage(`LLMessage: [${profileAlias}] ${result.model}`);
+            if (result.truncated) {
+              vscode.window.showWarningMessage(
+                `${prefix} [${profileAlias}] ${result.model} response was truncated. ` +
+                'Try a shorter diff or reduce output verbosity in your prompt.',
+              );
+            } else {
+              vscode.window.showInformationMessage(`${prefix} [${profileAlias}] ${result.model}`);
+            }
           } catch (err: unknown) {
             const error = err as { name?: string; message?: string };
             if (error.name === 'AbortError') {
               if (token.isCancellationRequested) {
-                vscode.window.showInformationMessage('LLMessage: Cancelled.');
+                vscode.window.showInformationMessage(`${prefix} Cancelled.`);
               } else {
-                vscode.window.showErrorMessage(`LLMessage: Request timed out (${TIMEOUT_MS}ms). Try a faster model or shorter diff.`);
+                vscode.window.showErrorMessage(`${prefix} Request timed out (${TIMEOUT_MS}ms). Try a faster model or shorter diff.`);
               }
               return;
             }
@@ -71,7 +78,7 @@ export function registerGenerateCommitCommand(
       );
     } catch (error: unknown) {
       const err = error as Error;
-      vscode.window.showErrorMessage(`LLMessage: ${err.message ?? 'Unknown error'}`);
+      vscode.window.showErrorMessage(`${prefix} ${err.message ?? 'Unknown error'}`);
     }
   });
 }

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { SecretManager } from './config/secrets';
 import { registerGenerateCommitCommand } from './commands/generateCommit';
+import { registerDebugCommand } from './commands/debug';
 import {
   registerAddProfileCommand,
   registerSwitchProfileCommand,
@@ -22,6 +23,7 @@ import { getConfig } from './config/settings';
 
 export function activate(context: vscode.ExtensionContext) {
   const secretManager = new SecretManager(context.secrets);
+  const version = String(context.extension.packageJSON.version ?? 'unknown');
 
   // ── TreeView Providers ──────────────────────────
   const profileTreeProvider = new ProfileTreeProvider();
@@ -66,6 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
     profilesTreeView,
     configWatcher,
     registerGenerateCommitCommand(context, secretManager),
+    registerDebugCommand(context),
     registerAddProfileCommand(context, secretManager),
     registerSwitchProfileCommand(context),
     registerSwitchProfileToCommand(context),
@@ -80,7 +83,7 @@ export function activate(context: vscode.ExtensionContext) {
     registerOpenSettingsJsonCommand(),
   );
 
-  console.log('LLMessage extension activated');
+  console.log(`v${version} LLMessage extension activated`);
 }
 
 export function deactivate() {

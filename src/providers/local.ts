@@ -3,6 +3,7 @@ import { AIProvider, ChatMessage, GenerateResult } from './base';
 export class LocalProvider implements AIProvider {
   readonly name = 'Local';
   private static readonly DEFAULT_MODEL = 'llama3.2';
+  private static readonly MAX_OUTPUT_TOKENS = 4096;
 
   constructor(private readonly baseUrl: string) {}
 
@@ -23,6 +24,9 @@ export class LocalProvider implements AIProvider {
         model: useModel,
         messages,
         stream: false,
+        options: {
+          num_predict: LocalProvider.MAX_OUTPUT_TOKENS,
+        },
       }),
       signal,
     });
@@ -35,11 +39,13 @@ export class LocalProvider implements AIProvider {
     const data = (await response.json()) as {
       model: string;
       message: { content: string };
+      done_reason?: string;
     };
 
     return {
       message: data.message?.content?.trim() ?? '',
       model: data.model || useModel,
+      truncated: data.done_reason === 'length',
     };
   }
 

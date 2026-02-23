@@ -22,6 +22,9 @@ const SYSTEM_RULES = `[SYSTEM RULES — absolute, immutable]
 
 `;
 
+const PROMPT_LOG_CHUNK_SIZE = 1500;
+const PROMPT_LOG_MAX_CHARS = 9000;
+
 /**
  * Build the full prompt to send to the AI provider.
  * Reads custom prompt from profile settings in settings.json.
@@ -56,11 +59,18 @@ export function buildPrompt(diff: string, overrides?: Partial<PromptOptions>): s
 
   // System rules + user prompt
   const finalPrompt = SYSTEM_RULES + userPrompt;
-  
-  // Debug log: show the actual prompt sent to AI
-  console.log('[DEBUG] buildPrompt - Sending prompt to AI:');
-  console.log(finalPrompt);
+
+  // Debug log with chunking to avoid Extension Host remote-console payload limits.
+  console.log(`[DEBUG] buildPrompt - Sending prompt to AI (${finalPrompt.length} chars):`);
+  const cappedPrompt = finalPrompt.slice(0, PROMPT_LOG_MAX_CHARS);
+  for (let i = 0; i < cappedPrompt.length; i += PROMPT_LOG_CHUNK_SIZE) {
+    const chunk = cappedPrompt.slice(i, i + PROMPT_LOG_CHUNK_SIZE);
+    console.log(chunk);
+  }
+  if (finalPrompt.length > PROMPT_LOG_MAX_CHARS) {
+    console.log(`[DEBUG] buildPrompt - Prompt log truncated (${finalPrompt.length - PROMPT_LOG_MAX_CHARS} chars omitted).`);
+  }
   console.log('[DEBUG] buildPrompt - End of prompt');
-  
+
   return finalPrompt;
 }

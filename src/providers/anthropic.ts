@@ -3,6 +3,7 @@ import { AIProvider, GenerateResult } from './base';
 export class AnthropicProvider implements AIProvider {
   readonly name = 'Anthropic';
   private static readonly DEFAULT_MODEL = 'claude-sonnet-4-20250514';
+  private static readonly MAX_OUTPUT_TOKENS = 4096;
 
   constructor(private readonly apiKey: string) {}
 
@@ -18,7 +19,7 @@ export class AnthropicProvider implements AIProvider {
       },
       body: JSON.stringify({
         model: useModel,
-        max_tokens: 300,
+        max_tokens: AnthropicProvider.MAX_OUTPUT_TOKENS,
         messages: [
           { role: 'user', content: prompt },
         ],
@@ -33,6 +34,7 @@ export class AnthropicProvider implements AIProvider {
 
     const data = (await response.json()) as {
       model: string;
+      stop_reason?: string;
       content: Array<{ type: string; text: string }>;
     };
 
@@ -40,6 +42,7 @@ export class AnthropicProvider implements AIProvider {
     return {
       message: textBlock?.text?.trim() ?? '',
       model: data.model || useModel,
+      truncated: data.stop_reason === 'max_tokens',
     };
   }
 

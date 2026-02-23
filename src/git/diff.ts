@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
  * Collect the staged diff from the current Git repository.
  * Falls back to unstaged diff if nothing is staged.
  */
-export async function getStagedDiff(maxLength: number): Promise<string> {
+export async function getStagedDiff(): Promise<string> {
   const gitExtension = vscode.extensions.getExtension('vscode.git')?.exports;
   if (!gitExtension) {
     throw new Error('Git extension not found. Make sure the built-in Git extension is enabled.');
@@ -29,11 +29,6 @@ export async function getStagedDiff(maxLength: number): Promise<string> {
     if (!diff || diff.trim().length === 0) {
       throw new Error('No changes detected. Stage some changes first.');
     }
-  }
-
-  // Truncate if too long
-  if (diff.length > maxLength) {
-    diff = diff.substring(0, maxLength) + '\n\n... (diff truncated)';
   }
 
   return diff;

@@ -5,6 +5,7 @@ import { AIProvider, ChatMessage, GenerateResult } from './base';
  */
 export class CustomProvider implements AIProvider {
   readonly name = 'Custom';
+  private static readonly MAX_OUTPUT_TOKENS = 4096;
 
   constructor(
     private readonly apiKey: string,
@@ -31,7 +32,7 @@ export class CustomProvider implements AIProvider {
     const body: Record<string, unknown> = {
       messages,
       temperature: 0.4,
-      max_tokens: 300,
+      max_tokens: CustomProvider.MAX_OUTPUT_TOKENS,
     };
     if (useModel) {
       body.model = useModel;
@@ -51,12 +52,14 @@ export class CustomProvider implements AIProvider {
 
     const data = (await response.json()) as {
       model?: string;
-      choices: Array<{ message: { content: string } }>;
+      choices: Array<{ message: { content: string }; finish_reason?: string }>;
     };
 
+    const choice = data.choices[0];
     return {
-      message: data.choices[0]?.message?.content?.trim() ?? '',
+      message: choice?.message?.content?.trim() ?? '',
       model: data.model || useModel || 'unknown',
+      truncated: choice?.finish_reason === 'length',
     };
   }
 

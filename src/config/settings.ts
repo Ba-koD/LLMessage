@@ -19,7 +19,6 @@ export function getConfig() {
     activeProfile: config.get<string>('activeProfile', ''),
     workspaceProfile: config.get<string>('workspaceProfile', ''),
     profiles: config.get<Record<string, Profile>>('profiles', {}),
-    maxDiffLength: config.get<number>('maxDiffLength', 4000),
     local: {
       url: config.get<string>('local.url', 'http://localhost:11434'),
     },

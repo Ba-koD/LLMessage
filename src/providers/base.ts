@@ -4,6 +4,7 @@
 export interface GenerateResult {
   message: string;
   model: string;
+  truncated?: boolean;
 }
 
 /**

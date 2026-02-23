@@ -2,7 +2,7 @@
   "name": "llmessage",
   "displayName": "LLMessage",
   "description": "AI-powered commit message generator supporting OpenAI, Anthropic, Gemini, Local, and custom endpoints",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "BakoD",
   "icon": "assets/icon.png",
   "engines": {
@@ -28,6 +28,11 @@
         "command": "llmessage.generateCommit",
         "title": "LLMessage: Generate Commit Message",
         "icon": "$(sparkle)"
+      },
+      {
+        "command": "llmessage.debug",
+        "title": "LLMessage: Debug Info",
+        "icon": "$(bug)"
       },
       {
         "command": "llmessage.addProfile",
@@ -176,13 +181,6 @@
           "default": {},
           "description": "Saved profiles. Each key is an alias with { provider, model, commitStyle, customPrompt, locale }."
         },
-        "llmessage.maxDiffLength": {
-          "type": "number",
-          "default": 4000,
-          "minimum": 500,
-          "maximum": 32000,
-          "description": "Maximum character length of diff sent to AI"
-        },
         "llmessage.local.url": {
           "type": "string",
           "default": "http://localhost:11434",
@@ -202,12 +200,9 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "lint": "eslint src --ext ts",
-    "package": "vsce package",
-    "publish:openvsx": "ovsx publish"
+    "test": "node scripts/test-devhost.js",
+    "package": "node ./node_modules/@vscode/vsce/vsce package",
+    "install:vsix": "node scripts/install-vsix.js"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
