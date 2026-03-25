@@ -2,12 +2,15 @@
   "name": "llmessage",
   "displayName": "LLMessage",
   "description": "AI-powered commit message generator supporting OpenAI, Anthropic, Gemini, Local, and custom endpoints",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "BakoD",
   "icon": "assets/icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
+  "extensionKind": [
+    "workspace"
+  ],
   "categories": [
     "SCM Providers",
     "Machine Learning"

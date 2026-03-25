@@ -26,7 +26,7 @@ export function registerGenerateCommitCommand(
         },
         async (progress, token) => {
           progress.report({ message: 'Collecting git diff...' });
-          const diff = await getStagedDiff();
+          const { diff, repo } = await getStagedDiff();
 
           if (token.isCancellationRequested) return;
 
@@ -50,7 +50,7 @@ export function registerGenerateCommitCommand(
               return;
             }
 
-            setCommitMessage(result.message);
+            await setCommitMessage(result.message, repo);
             if (result.truncated) {
               vscode.window.showWarningMessage(
                 `${prefix} [${profileAlias}] ${result.model} response was truncated. ` +

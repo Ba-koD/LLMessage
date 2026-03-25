@@ -12,7 +12,7 @@ export function registerDebugCommand(context: vscode.ExtensionContext): vscode.D
 
     let diffState = 'unavailable';
     try {
-      const diff = await getStagedDiff();
+      const { diff } = await getStagedDiff();
       diffState = `${diff.length} chars`;
     } catch (error: unknown) {
       const err = error as Error;
