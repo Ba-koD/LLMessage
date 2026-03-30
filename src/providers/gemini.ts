@@ -37,7 +37,9 @@ export class GeminiProvider implements AIProvider {
         const errorJson = JSON.parse(errorText);
         msg = errorJson?.error?.message ?? errorText;
       } catch {}
-      throw new Error(`Gemini API error (${response.status}): ${msg}`);
+      const err = new Error(`Gemini API error (${response.status}): ${msg}`);
+      (err as any).statusCode = response.status;
+      throw err;
     }
 
     const data = (await response.json()) as {

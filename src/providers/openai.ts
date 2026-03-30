@@ -30,7 +30,9 @@ export class OpenAIProvider implements AIProvider {
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`OpenAI API error (${response.status}): ${error}`);
+      const err = new Error(`OpenAI API error (${response.status}): ${error}`);
+      (err as any).statusCode = response.status;
+      throw err;
     }
 
     const data = (await response.json()) as {

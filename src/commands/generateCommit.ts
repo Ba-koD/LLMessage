@@ -3,8 +3,15 @@ import { SecretManager } from '../config/secrets';
 import { createProvider } from '../providers/factory';
 import { getStagedDiff, setCommitMessage } from '../git/diff';
 import { buildPrompt } from '../prompt/builder';
+import { ProviderType } from '../config/settings';
 
 const TIMEOUT_MS = 60_000;
+
+const RATE_LIMIT_URLS: Partial<Record<ProviderType, string>> = {
+  gemini: 'https://aistudio.google.com/app/rate-limit',
+  openai: 'https://platform.openai.com/settings/organization/limits',
+  anthropic: 'https://console.anthropic.com/settings/limits',
+};
 
 /**
  * Main command: generate a commit message from staged changes.
@@ -17,6 +24,7 @@ export function registerGenerateCommitCommand(
   const prefix = `v${version} LLMessage:`;
 
   return vscode.commands.registerCommand('llmessage.generateCommit', async () => {
+    let providerName = '';
     try {
       await vscode.window.withProgress(
         {
@@ -35,6 +43,7 @@ export function registerGenerateCommitCommand(
 
           progress.report({ message: 'Generating commit message...' });
           const { provider, modelOverride, profileAlias } = await createProvider(secretManager);
+          providerName = provider.name;
 
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -77,8 +86,23 @@ export function registerGenerateCommitCommand(
         },
       );
     } catch (error: unknown) {
-      const err = error as Error;
-      vscode.window.showErrorMessage(`${prefix} ${err.message ?? 'Unknown error'}`);
+      const err = error as Error & { statusCode?: number };
+      if (err.statusCode === 429) {
+        const nameToProvider: Record<string, ProviderType> = {
+          'OpenAI': 'openai', 'Anthropic': 'anthropic', 'Google Gemini': 'gemini',
+        };
+        const rateLimitUrl = RATE_LIMIT_URLS[nameToProvider[providerName]];
+        const buttons = rateLimitUrl ? ['View Rate Limits'] : [];
+        const action = await vscode.window.showErrorMessage(
+          `${prefix} Rate limit exceeded (429). Check your API usage.`,
+          ...buttons,
+        );
+        if (action === 'View Rate Limits' && rateLimitUrl) {
+          vscode.env.openExternal(vscode.Uri.parse(rateLimitUrl));
+        }
+      } else {
+        vscode.window.showErrorMessage(`${prefix} ${err.message ?? 'Unknown error'}`);
+      }
     }
   });
 }
