@@ -30,10 +30,10 @@ const SUGGESTED_MODELS: Record<ProviderType, { label: string; description: strin
     { label: 'claude-haiku-3-5-20241022', description: 'Claude 3.5 Haiku — fastest' },
   ],
   gemini: [
-    { label: 'gemini-2.5-flash', description: 'Fast & capable (recommended)' },
-    { label: 'gemini-2.5-pro', description: 'Most capable Gemini' },
-    { label: 'gemini-2.0-flash', description: 'Gemini 2.0 Flash' },
-    { label: 'gemini-2.0-flash-lite', description: 'Lightweight & fast' },
+    { label: 'gemini-2.5-flash', description: 'Fast & capable (recommended, RPD: 20)' },
+    { label: 'gemini-3.0-flash', description: 'Gemini 3 Flash (RPD: 20)' },
+    { label: 'gemini-2.5-flash-lite', description: 'Lightweight & fast (RPD: 20)' },
+    { label: 'gemini-3.1-flash-lite', description: 'Gemini 3.1 Flash Lite (RPD: 500)' },
   ],
   local: [
     { label: 'llama3.2', description: 'Llama 3.2 (recommended)' },
@@ -75,22 +75,36 @@ async function pickModel(provider: ProviderType): Promise<string> {
     qp.matchOnDescription = true;
 
     const defaultItem = { label: '$(star) Use default', description: 'Let the provider choose', alwaysShow: true };
+    const customItem = { label: '$(pencil) Custom model...', description: 'Enter a model name manually', alwaysShow: true };
     const suggestedItems = suggested.map((m) => ({ label: m.label, description: m.description, alwaysShow: false }));
-    qp.items = [defaultItem, ...suggestedItems];
+    qp.items = [defaultItem, ...suggestedItems, customItem];
 
     let resolved = false;
 
-    qp.onDidAccept(() => {
+    qp.onDidAccept(async () => {
       if (resolved) { return; }
-      resolved = true;
 
       const selected = qp.selectedItems[0];
       if (selected && selected === defaultItem) {
+        resolved = true;
         qp.dispose();
         resolve('');
         return;
       }
 
+      if (selected && selected === customItem) {
+        resolved = true;
+        qp.dispose();
+        const input = await vscode.window.showInputBox({
+          prompt: 'Enter custom model name',
+          placeHolder: 'e.g., gemini-2.5-pro-preview-05-06',
+          ignoreFocusOut: true,
+        });
+        resolve(input?.trim() ?? '');
+        return;
+      }
+
+      resolved = true;
       // If an item is selected, use its label; otherwise use the typed text
       const value = selected ? selected.label : qp.value.trim();
       qp.dispose();
