@@ -2,7 +2,7 @@
   "name": "llmessage",
   "displayName": "LLMessage",
   "description": "AI-powered commit message generator supporting OpenAI, Anthropic, Gemini, Local, and custom endpoints",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "publisher": "BakoD",
   "icon": "assets/icon.png",
   "engines": {
@@ -203,6 +203,8 @@
     }
   },
   "scripts": {
+    "compile": "tsc -p ./",
+    "vscode:prepublish": "npm run compile",
     "test": "node scripts/test-devhost.js",
     "package": "node ./node_modules/@vscode/vsce/vsce package",
     "install:vsix": "node scripts/install-vsix.js"
