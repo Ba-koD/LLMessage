@@ -46,6 +46,24 @@ async function waitForRepositories(git: ReturnType<Awaited<ReturnType<typeof get
 }
 
 /**
+ * Find the repository whose rootUri matches the given URI exactly.
+ * Used when the command originates from a specific SCM panel section.
+ */
+function findRepositoryByUri(
+  git: ReturnType<Awaited<ReturnType<typeof getGitAPI>>['getAPI']>,
+  uri: vscode.Uri,
+) {
+  const target = uri.fsPath;
+  const repo = git.repositories.find(
+    (r: { rootUri: vscode.Uri }) => r.rootUri.fsPath === target,
+  );
+  if (!repo) {
+    throw new Error(`No Git repository found for ${target}.`);
+  }
+  return repo;
+}
+
+/**
  * Find the repository that matches the active editor's file,
  * or fall back to the first repo with staged changes, or the first repo overall.
  */
@@ -79,15 +97,24 @@ function pickRepository(git: ReturnType<Awaited<ReturnType<typeof getGitAPI>>['g
 /**
  * Collect the staged diff from the current Git repository.
  * Falls back to unstaged diff if nothing is staged.
+ *
+ * @param sourceControlRootUri  When the command is triggered from a specific
+ *   SCM title-bar button, VS Code passes the SourceControl object whose
+ *   `rootUri` identifies the exact repository.  Forward it here so we skip
+ *   the heuristic in `pickRepository`.
  */
-export async function getStagedDiff(): Promise<{ diff: string; repo: unknown }> {
+export async function getStagedDiff(
+  sourceControlRootUri?: vscode.Uri,
+): Promise<{ diff: string; repo: unknown }> {
   const git = await getGitAPI();
   await waitForRepositories(git);
 
   console.log('[LLMessage] repositories:', git.repositories.length,
     git.repositories.map((r: { rootUri: vscode.Uri }) => r.rootUri.fsPath));
 
-  const repo = pickRepository(git);
+  const repo = sourceControlRootUri
+    ? findRepositoryByUri(git, sourceControlRootUri)
+    : pickRepository(git);
   console.log('[LLMessage] picked repo:', repo.rootUri.fsPath);
 
   // Try staged changes first

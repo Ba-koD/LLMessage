@@ -23,7 +23,7 @@ export function registerGenerateCommitCommand(
   const version = String(context.extension.packageJSON.version ?? 'unknown');
   const prefix = `v${version} LLMessage:`;
 
-  return vscode.commands.registerCommand('llmessage.generateCommit', async () => {
+  return vscode.commands.registerCommand('llmessage.generateCommit', async (sourceControl?: { rootUri?: vscode.Uri }) => {
     let providerName = '';
     try {
       await vscode.window.withProgress(
@@ -34,7 +34,7 @@ export function registerGenerateCommitCommand(
         },
         async (progress, token) => {
           progress.report({ message: 'Collecting git diff...' });
-          const { diff, repo } = await getStagedDiff();
+          const { diff, repo } = await getStagedDiff(sourceControl?.rootUri);
 
           if (token.isCancellationRequested) return;
 
